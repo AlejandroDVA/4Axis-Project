@@ -19,7 +19,22 @@
 </div><br>
 <div>
     <button v-on:click="findHistory" v-if="userRole === 'admin'">Conversion History</button>
-    <p v-if="userRole === 'admin'" >historial: {{history}}</p>
+    <div v-if="userRole === 'admin'" >
+        <button @click="exportToExcel">Exportar a Excel</button>
+        <ul>
+  <li v-for="(item, index) in items" :key="index">
+    <ul>
+      <li>User: {{ item.user }}</li>
+      <li>Activity Date: {{ item.activityDate }}</li>
+      <li>Origin Amount: {{ item.originAmount }}</li>
+      <li>Conversion Date: {{ item.convertionDate }}</li>
+      <li>Coin Value: {{ item.coinValue }}</li>
+      <li>Conversion Amount: {{ item.convertionAmount }}</li>
+    </ul>
+  </li>
+</ul>
+
+</div>
 </div>
 
 </template>
@@ -27,6 +42,7 @@
 
 <script>
 import axios from 'axios';
+import * as XLSX from 'xlsx';
 export default {
     name:'Home',
     data(){
@@ -36,7 +52,9 @@ export default {
             result: 'resultado',
             loading: null,
             userRole: '',
-            history: ''
+            history: '',
+            userName: '',
+            items: ''
         }
         
     },
@@ -47,6 +65,7 @@ export default {
             let result = await axios.post("http://localhost:3000/convert",{
                 date:this.date,
                 value: this.value,
+                user: this.userName
             });
             if(result.status==200){
                 console.log(result);
@@ -67,14 +86,21 @@ export default {
             if(result.status==200){
                 this.result=result.data;
                 console.log(result);
-                alert("login success")
-                this.loading = null
-                this.history= result.data
+                //alert("login success")
+                this.loading = null;
+                this.history= result.data;
+                this.items = result.data;
             }else{
                 console.log(result);
                 alert("invalid credentials")
                 this.loading = null
             }
+        },
+        exportToExcel() {
+        const ws = XLSX.utils.json_to_sheet(this.items);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Datos');
+        XLSX.writeFile(wb, 'datos.xlsx');
         },
         logout(){
             console.log("logout")
@@ -88,6 +114,7 @@ export default {
         if(user){
             let userData = JSON.parse(user);
             this.userRole = userData[0].rol;
+            this.userName = userData[0].name;
         }
         if(!user){
             this.$router.push({name:'SignUp'})

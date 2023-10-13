@@ -34,7 +34,7 @@ export default {
             });
             if(result.status==200){
                 console.log(result);
-                alert("login success")
+                //alert("login success")
                 localStorage.setItem("user-info",JSON.stringify(result.data))
                 this.$router.push({name:'Home'})
             }else{
